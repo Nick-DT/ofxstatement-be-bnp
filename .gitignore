@@ -12,3 +12,7 @@ venv
 .project
 .pydevproject
 *.sublime*
+*.csv
+*.ofx
+*.xls
+*.xlsx

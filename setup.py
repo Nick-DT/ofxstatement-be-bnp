@@ -4,17 +4,17 @@
 from setuptools import find_packages
 from distutils.core import setup
 
-version = "0.1.4"
+version = "0.2.0"
 
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='ofxstatement-be-bnp',
       version=version,
-      author="Benoit Frisque",
-      author_email="benoitfrisque@gmail.com",
-      url="https://github.com/bfrisque/ofxstatement-be-bnp",
-      description=("ofxstatement plugin for parsing Belgian BNP Paribas Fortis bank's CSV statements to OFX"),
+      author="Nicolas Dt",
+      author_email="6697462+Nick-DT@users.noreply.github.com",
+      url="https://github.com/Nick-DT/ofxstatement-be-bnp",
+      description=("Updated ofxstatement plugin for parsing Belgian BNP Paribas Fortis bank's CSV statements to OFX"),
       long_description=long_description,
       license="GPLv3",
       keywords=["ofx", "banking", "statement", "bnp", "csv"],

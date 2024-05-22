@@ -126,7 +126,7 @@ class bnpParser(CsvStatementParser):
         # Now if available add the account nb, and if no payee name use account nb instead
         stmtline.payee = self.clean_text_to_ascii(line[7].strip()) # Payee defaults to account nb
         if payeetxt :
-            if (not line[7] or re.search(r"0+", line[7].strip())) : stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
+            if (not line[7] or re.search(r"^0+", line[7].strip())) : stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
             elif line[7] : stmtline.payee = self.clean_text_to_ascii(line[7].strip()) +" - "+ payeetxt.strip()
         
         # Compute proper reference

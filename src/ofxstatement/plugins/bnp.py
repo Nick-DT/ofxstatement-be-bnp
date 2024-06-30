@@ -58,7 +58,7 @@ class bnpParser(CsvStatementParser):
 
     def extract_text_between_card_and_date(self,description):
         # Regular expression to match an obfuscated card number (with X or digits)
-        card_pattern = r"[0-9X]{4} [0-9X]{4} [0-9X]{4} [0-9X]{4}"
+        card_pattern = r"[0-9X]{4} [0-9X]{4} [0-9X]{4} [0-9X]{4} [0-9X]{0,1}"
 
         # Regular expression to match a date in the format DD/MM/YYYY
         date_pattern = r"\d{2}/\d{2}/\d{4}"

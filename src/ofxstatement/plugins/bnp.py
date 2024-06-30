@@ -133,8 +133,10 @@ class bnpParser(CsvStatementParser):
         # Now if available add the account nb, and if no payee name use account nb instead
         stmtline.payee = self.clean_text_to_ascii(row[self.col_index['Contrepartie']].strip()) # Payee defaults to account nb
         if payeetxt :
-            if (not row[self.col_index['Contrepartie']] or re.search(r"^0+", row[self.col_index['Contrepartie']].strip())) : stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
-            elif row[self.col_index['Contrepartie']] : stmtline.payee = self.clean_text_to_ascii(row[self.col_index['Contrepartie']].strip()) +" - "+ payeetxt.strip()
+            if (not row[self.col_index['Contrepartie']] or re.search(r"^0+", row[self.col_index['Contrepartie']].strip())) : 
+                stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
+            elif row[self.col_index['Contrepartie']] : 
+                stmtline.payee = payeetxt.strip() +" - "+ stmtline.payee
         
         # Compute proper reference
         bk_id = ""

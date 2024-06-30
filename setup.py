@@ -11,7 +11,7 @@ with open('README.rst') as f:
 
 setup(name='ofxstatement-be-bnp',
       version=version,
-      author="Nicolas Dt",
+      author="Nicolas Dt, based on the version of Benoit Frisque",
       author_email="6697462+Nick-DT@users.noreply.github.com",
       url="https://github.com/Nick-DT/ofxstatement-be-bnp",
       description=("Updated ofxstatement plugin for parsing Belgian BNP Paribas Fortis bank's CSV statements to OFX"),

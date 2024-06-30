@@ -152,9 +152,10 @@ class bnpParser(CsvStatementParser):
                 ref_match = re.search(ref_pattern, description[ref_start_match.end():])
                 bk_id = description[ref_start_match.end()+ref_match.start():ref_start_match.end()+ref_match.end()]
         
-        if not bk_id: stmtline.check_no = row[self.col_index['Nº de séquence']]
-        else :        stmtline.check_no = str(bk_id)     
+        if not bk_id: stmtline.check_no = row[self.col_index['Nº de séquence']].strip()
+        else :        stmtline.check_no = str(bk_id).strip()   
         stmtline.refnum = stmtline.check_no
+        stmtline.id = stmtline.check_no
         
         # If available, concatenate both the type of transaction and the comm in the same column
         if not row[9] : stmtline.memo = self.clean_text_to_ascii(row[self.col_index['Type de transaction']].strip())

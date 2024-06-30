@@ -34,6 +34,12 @@ class bnpParser(CsvStatementParser):
         'amount': 3
     }
 
+    header =['Nº de séquence',"Date d'exécution",'Date valeur','Montant','Devise du compte','Numéro de compte',
+             'Type de transaction','Contrepartie','Nom de la contrepartie','Communication','Détails','Statut',
+             'Motif du refus']
+
+    col_index = dict(zip(header, range(0, 13)))
+
     def parse(self):
         """Main entry point for parsers
         super() implementation will call to split_records and parse_record to
@@ -44,7 +50,7 @@ class bnpParser(CsvStatementParser):
         return stmt
 
     def split_records(self):
-        """Return iterable object consisting of a line per transaction
+        """Return iterable object consisting of a row per transaction
         """
         reader = csv.reader(self.fin, delimiter=";")
         next(reader, None)
@@ -89,45 +95,46 @@ class bnpParser(CsvStatementParser):
 
         return textOut
 
-    def parse_record(self, line):
-        """Parse given transaction line and return StatementLine object
+    def parse_record(self, row):
+        """Parse given transaction row and return StatementLine object
         """
 
-        stmtline = super(bnpParser, self).parse_record(line)
+        stmtline = super(bnpParser, self).parse_record(row)
         
         bnp_trtyp_mapping = { 
             "Paiement par carte"                  : "POS"      ,
             "Ordre permanent"                     : "REPEATPMT"  ,
             "Virement en euros"                   : "XFER"  ,
-            "Paiement par carte de crédit"        : "PAYMENT"              ,
-            "Frais liés au compte"                : "FEE"      ,
+            "Paiement par carte de crédit"        : "POS"              ,
+            "Frais liés au compte"                : "SRVCHG"      ,
             "Corrections opérations par carte"    : "OTHER"                  ,
             "Intérêts du compte d'épargne"        : "INT"              ,
             "Domiciliation"                       : "DIRECTDEBIT"  ,
             "Virement instantané en euros"        : "XFER"              ,
             "Retrait d'espèces par carte"         : "ATM"              ,
             "Retrait d'espèces à l'étranger"      : "ATM"                  ,
-            "Frais de gestion de compte"          : "FEE"              ,
+            "Frais de gestion de compte"          : "SRVCHG"              ,
             "Coûts opérations diverses"           : "FEE"          ,
-            "Retrait devise étrangère au guichet" : "ATM"                      ,
+            "Retrait devise étrangère au guichet" : "CASH"                      ,
             "Versement en espèces par carte"      : "DIRECTDEP"                  
 
         }
-        stmtline.trntype = bnp_trtyp_mapping[line[6]]
-        # stmtline.trntype = 'DEBIT' if stmtline.amount < 0 else 'CREDIT'
+        stmtline.trntype = bnp_trtyp_mapping[row[self.col_index['Type de transaction']]]
         
-        description = self.clean_text_to_ascii(line[10])
+        # stmtline.trntype = 'DEBIT' if stmtline.amount < 0 else 'CREDIT'
+        description = self.clean_text_to_ascii(row[self.col_index['Détails']])
         # print(description)
         # Compute proper payee
-        payeetxt = self.clean_text_to_ascii(line[8])
-        if not payeetxt and line[6].strip().upper()=="PAIEMENT PAR CARTE":
+
+        payeetxt = self.clean_text_to_ascii(row[self.col_index['Nom de la contrepartie']])
+        if not payeetxt and row[self.col_index['Type de transaction']].strip().upper()=="PAIEMENT PAR CARTE":
             payeetxt = self.clean_text_to_ascii(self.extract_text_between_card_and_date(description))
         
         # Now if available add the account nb, and if no payee name use account nb instead
-        stmtline.payee = self.clean_text_to_ascii(line[7].strip()) # Payee defaults to account nb
+        stmtline.payee = self.clean_text_to_ascii(row[self.col_index['Contrepartie']].strip()) # Payee defaults to account nb
         if payeetxt :
-            if (not line[7] or re.search(r"^0+", line[7].strip())) : stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
-            elif line[7] : stmtline.payee = self.clean_text_to_ascii(line[7].strip()) +" - "+ payeetxt.strip()
+            if (not row[self.col_index['Contrepartie']] or re.search(r"^0+", row[self.col_index['Contrepartie']].strip())) : stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
+            elif row[self.col_index['Contrepartie']] : stmtline.payee = self.clean_text_to_ascii(row[self.col_index['Contrepartie']].strip()) +" - "+ payeetxt.strip()
         
         # Compute proper reference
         bk_id = ""
@@ -143,19 +150,20 @@ class bnpParser(CsvStatementParser):
                 ref_match = re.search(ref_pattern, description[ref_start_match.end():])
                 bk_id = description[ref_start_match.end()+ref_match.start():ref_start_match.end()+ref_match.end()]
         
-        if not bk_id: stmtline.check_no = line[0]
+        if not bk_id: stmtline.check_no = row[self.col_index['Nº de séquence']]
         else :        stmtline.check_no = str(bk_id)     
-
+        stmtline.refnum = stmtline.check_no
+        
         # If available, concatenate both the type of transaction and the comm in the same column
-        if not line[9] : stmtline.memo = self.clean_text_to_ascii(line[6].strip())
-        else : stmtline.memo = self.clean_text_to_ascii(line[6].strip() +" - "+ line[9].strip())
-        # print(line[6])
+        if not row[9] : stmtline.memo = self.clean_text_to_ascii(row[self.col_index['Type de transaction']].strip())
+        else : stmtline.memo = self.clean_text_to_ascii(row[self.col_index['Type de transaction']].strip() +" - "+ row[9].strip())
+        # print(row[self.col_index['Type de transaction']])
         # print(stmtline.memo)
 
         # Raise an exception if we have statements for more than one account
         if (self.statement.account_id == None):
-            self.statement.account_id = line[5]
-        elif (self.statement.account_id != line[5]):
+            self.statement.account_id = row[5]
+        elif (self.statement.account_id != row[5]):
             raise ValueError("CSV file contains multiple accounts")
         
         return stmtline

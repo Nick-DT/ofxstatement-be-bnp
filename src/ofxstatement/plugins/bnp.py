@@ -129,14 +129,16 @@ class bnpParser(CsvStatementParser):
         payeetxt = self.clean_text_to_ascii(row[self.col_index['Nom de la contrepartie']])
         if not payeetxt and row[self.col_index['Type de transaction']].strip().upper()=="PAIEMENT PAR CARTE":
             payeetxt = self.clean_text_to_ascii(self.extract_text_between_card_and_date(description))
-        
+        # Get rid of multiple spaces/tabs in payeetxt
+        payeetxt = re.sub(r'\s+', ' ', payeetxt.strip())
+
         # Now if available add the account nb, and if no payee name use account nb instead
         stmtline.payee = self.clean_text_to_ascii(row[self.col_index['Contrepartie']].strip()) # Payee defaults to account nb
         if payeetxt :
             if (not row[self.col_index['Contrepartie']] or re.search(r"^0+", row[self.col_index['Contrepartie']].strip())) : 
-                stmtline.payee = payeetxt.strip() # but if empty and name isn't, take the name
+                stmtline.payee = payeetxt # but if empty and name isn't, take the name
             elif row[self.col_index['Contrepartie']] : 
-                stmtline.payee = payeetxt.strip() +" - "+ stmtline.payee
+                stmtline.payee = payeetxt +" - "+ stmtline.payee
         
         # Compute proper reference
         bk_id = ""
